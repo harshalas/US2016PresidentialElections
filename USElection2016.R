@@ -1,12 +1,5 @@
-install.packages("rjson")
-library(rjson)
-
-
-
 #Get data from the website
 library(XML)
-#rawRCP <- readHTMLTable('http://www.realclearpolitics.com/epolls/2016/president/us/general_election_trump_vs_clinton-5491.html')
-#RCP <- data.frame(rawPMI[[1]])
 
 #Data From Polls published on Huffington Post
 
@@ -16,8 +9,6 @@ Huff <- Huff %>% filter(!grepl("2015",Poll))
 Huff_copy <- Huff
 
 # Get Structure of Data
-
-
 
 View(Huff)
 dim(Huff)
@@ -37,14 +28,11 @@ num_voters <- str_extract(Huff$Poll,word(Huff$Poll,-3))
 num_voters <- gsub(",","",num_voters)
 as.numeric(num_voters)
 
-#View(num_voters)
-
 # Extract Voter Type from Poll Column
 
 voter_type <- str_extract(Huff$Poll,word(Huff$Poll,-2))
 voter_type<- as.vector(voter_type)
 
-#View(voter_type)
 
 # Extract Poll name and clean it.
 poll_name <- str_extract(Huff$Poll,word(Huff$Poll,1))
@@ -61,8 +49,6 @@ poll_week
 start_date <- word(poll_week,1,2)
 end_date <- word(poll_week,-2,-1)
 
-
-
 poll_start_date <- as.Date(start_date,"%b %d")
 poll_end_date <- as.Date(end_date,"%b %d")
 
@@ -74,9 +60,6 @@ library(lubridate)
 ifelse(month(poll_start_date) == 01,"Jan","false")
 
 # Add 5 new columns to Huff Dataframe
-
-
-#Huff  %>%  mutate(num_of_voters = num_voters,voters_type = voter_type)
 Huff_copy <- mutate(Huff_copy, num_of_voters = num_voters,type_of_voter = voter_type,
                     poll_name = poll_name,poll_week = poll_week,
                     poll_start_date = poll_start_date,poll_end_date = poll_end_date)
