@@ -1,0 +1,17 @@
+Predictions for United States Presidential Elections 2016
+	
+
+Objective
+Predict the outcome of the Presidential Elections to be held in November 2016 in United States.
+
+Audience
+United States being one of the Super powers , the leader of the country will have a significant influence not just for the country but the entire world. The country's decisions will impact wide range of issues eg financial, political, fight against terrorism, environment etc .With my Analysis I would attempt to give an idea of the general feeling among the citizens of the country towards the candidates who are running for the office. 
+
+Data Source
+Huffington Post, One of the leading news aggregators in America, has been publishing the results of various Polls conducted across the nation to get to know whom people will be electing come November. I will be using the results of the polls from Jan 2016 to current date . I will use R's XML library to get the live data from Huffington Post and convert it to Dataframe and use it to build models for my predictions.
+
+Approach
+Data from Huffington Post contains key fields derived from polls. I will be cleaning up the data, use data wrangling techniques to derive more variables, transform the data and use plots to get a general idea. Further,  I plan to build models based on the data. There is sufficient data from 30+ polls  for me to have a training set and test sets. 
+
+Deliverables
+Deliverables of the analysis will be R code along with a Report .
