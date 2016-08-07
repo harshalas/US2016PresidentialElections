@@ -51,8 +51,6 @@ poll_name <- str_extract(Huff$Poll,word(Huff$Poll,1))
 
 poll_name <- gsub("\n","",poll_name)
 
-#poll_name
-
 # Extract poll week
 patt <- '(\\w+)\\s*(\\w+)\\s*\u2013\\s*(\\w+)\\s*(\\w+)'
 
