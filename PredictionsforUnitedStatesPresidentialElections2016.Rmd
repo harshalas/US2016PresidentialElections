@@ -1,0 +1,247 @@
+---
+title: "Predictions for United States Presidential Elections 2016"
+author: "Harshala Rajesh"
+date: "August 16, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+United States of America being one of the Superpowers, the leader of the country will have a significant influence not just for the country but the entire world. The President of the United States is considered one of the world's most powerful people, leading the world's only contemporary superpower. The role includes being the commander-in-chief of the world's most expensive military with the largest nuclear arsenal and leading the nation with the largest economy by real and nominal GDP. The office of the president holds significant hard and soft power both in the United States and abroad.1
+
+The President is elected by Electoral College to a four-year term. Current President Barack Obama will be ending his second four-year term and The United States Presidential Election is scheduled for Tuesday, November 8, 2016. The series of presidential primary elections and caucuses took place between February 1 and June 14, 2016. 
+
+Former Secretary of State and New York Senator Hillary Clinton is the Democratic Party's presidential nominee. Businessman and reality television personality Donald Trump is the Republican Party's presidential nominee.
+Hillary Clinton, if elected will be the first woman to take the Office of the President in United States which makes this year's election very interesting. 
+Opinion Polls are conducted Nationwide and they seem to tell a consistent story as to where the race stands. 
+
+The Report is an attempt at predicting the probable President of United States of America based on the Opinion Polls conducted from January 2016 to present day. 
+
+## Description of Dataset
+
+Huffington Post, One of the leading news aggregators in America, has been publishing the results of various Polls conducted across the nation. R's XML library will be used to get the live data from Huffington Post - http://elections.huffingtonpost.com/pollster/2016-general-election-trump-vs-clinton
+
+The Dataset contains Poll information, Percent Votes for Trump, Clinton, Others, Undecided and Spread. Results of over 30 agents conducting the polls from past 20 months are listed. For the current study, results from January 2016 and onwards will be used. 
+
+## Analysis and Cleaning of Variables in the Data Set
+
+Data will be extracted from the website when code is run and results from January 2016 and onwards will be extracted
+
+```{r message=FALSE}
+#Get data from the website
+library(XML)
+
+#Data From Polls published on Huffington Post
+rawHuff <- readHTMLTable('http://elections.huffingtonpost.com/pollster/2016-general-election-trump-vs-clinton')
+Huff <- data.frame(rawHuff[[1]])
+
+```{r include=FALSE, cache=FALSE}
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(lubridate)
+library('knitr')
+library(ggplot2)
+```
+```{r}
+Huff <- Huff %>% dplyr::filter(!grepl("2015",Poll))
+
+
+```
+
+#### Dataset : `r dim(Huff)`
+
+Data Extracted Contains Information from Polls conducted by various agencies like Rasmussen, CNN totalling to 26 sources. There are several challenges with this data
+ 
+* Data is extracted using readHTMLTable function in XML library which has advantage of capturing the latest and greatest poll results
+* Data contains information from previous year, hence only Poll results from January 2016 and onwards will be filtered.
+* Poll Field in the results is a combination of Poll name, Poll week, Number of people who participated in the poll and the type of voters.
+* Fields need to be extracted from the above field
+
+#### Extract poll_name, start_date,end_date,type_of_voter and number_of_voters from Poll field
+
+```{r}
+
+# Replace Poll Field to end with "Voters"
+Huff$Poll <- gsub("Adults","Adult Voters",Huff$Poll)
+
+# Extract num_voters from Poll Column
+num_voters <- str_extract(Huff$Poll,word(Huff$Poll,-3))
+num_voters <- as.numeric(gsub(",","",num_voters))
+
+# Extract Voter Type from Poll Column
+voter_type <- as.vector(str_extract(Huff$Poll,word(Huff$Poll,-2)))
+
+# Extract Poll name and clean it.
+poll_name <- str_extract(Huff$Poll,word(Huff$Poll,1))
+poll_name <- gsub("\n","",poll_name)
+
+# Extract poll week
+patt <- '(\\w+)\\s*(\\w+)\\s*\u2013\\s*(\\w+)\\s*(\\w+)'
+
+poll_week <- str_extract(Huff$Poll,patt)
+
+start_date <- word(poll_week,1,2)
+end_date <- word(poll_week,-2,-1)
+
+poll_start_date <- as.Date(start_date,"%b %d")
+poll_end_date <- as.Date(end_date,"%b %d")
+
+
+```
+
+#### Add the extracted Variable  
+
+Extracted Values are added as columns to the dataframe.
+Based on the poll week, polls need to be sorted on a monthly basis.
+Percent Votes for each candidate will be converted to numeric values. 
+Finally Poll field will be removed from the dataset.
+Data will be re-arrange for better readability
+
+```{r}
+# Add 5 new columns to Huff Dataframe
+Huff <- mutate(Huff, num_of_voters = num_voters,type_of_voter = voter_type,
+                    poll_name = poll_name,poll_week = poll_week,
+                    poll_start_date = poll_start_date,poll_end_date = poll_end_date)
+
+# Compute month variable from poll_start_date
+Huff$month <- ifelse(month(Huff$poll_start_date)==1,1,
+                 ifelse(month(Huff$poll_start_date)==2,2,
+                    ifelse(month(Huff$poll_start_date)==3,3,
+                       ifelse(month(Huff$poll_start_date)==4,4,
+                          ifelse(month(Huff$poll_start_date)==5,5,
+                             ifelse(month(Huff$poll_start_date)==6,6,                                                           ifelse(month(Huff$poll_start_date)==7,7,
+                                   ifelse(month(Huff$poll_start_date)==8,8,
+                                      ifelse(month(Huff$poll_start_date)==9,9,
+                                         ifelse(month(Huff$poll_start_date)==10,10,
+                                            ifelse(month(Huff$poll_start_date)==11,11,11)
+                                               ))))))))))
+
+
+Huff$month <- as.factor(Huff$month)
+
+# Remove Poll Column
+Huff$Poll <- NULL
+
+# Convert percent_votes from char to numeric
+Huff$Trump <- as.numeric(as.character(Huff$Trump))
+Huff$Clinton <- as.numeric(as.character(Huff$Clinton))
+Huff$Other <- as.numeric(as.character(Huff$Other))
+Huff$Undecided <- as.numeric(as.character(Huff$Undecided))
+
+Huff <- Huff[c(8,9,1,2,3,4,12,10,11,7,6,5)]
+
+kable(head(Huff[,1:ncol(Huff)]), format = "markdown")
+```
+
+
+Data has to be transformed to obtain certain plots to explain the trend of the candidates across polls and in various months. Data is re-arranged for better readability
+
+```{r}
+# Transpose data
+
+Huff_gathered <- Huff %>% gather(Candidate,percent_votes,Trump:Undecided)
+
+Huff_gathered$Candidate <- as.factor(Huff_gathered$Candidate)
+
+Huff_gathered$Poll <- NULL
+
+Huff_gathered <- Huff_gathered[c(1,2,9,10,3,4,5,6,7,8)]
+
+kable(head(Huff_gathered[,1:ncol(Huff_gathered)]), format = "markdown")
+
+```
+
+
+## Exploratory Data Analysis
+
+Line Plots for all the candidates over the months as reported by Various Polls. 
+
+
+```{r  warning=FALSE, message=FALSE, cache=FALSE}
+
+ggplot(Huff_gathered,aes(month,percent_votes)) + 
+  geom_line(data = Huff_gathered,aes(group = Candidate,color = Candidate)) +
+  facet_wrap(~poll_name) + scale_colour_manual(values=c("blue","green","red","black"))
+
+# Trend from January to Present 
+
+Huff_CT_trend <- aggregate(percent_votes ~ Candidate + month,Huff_gathered,mean)
+
+ggplot(Huff_CT_trend,aes(month,percent_votes)) + geom_line(data = Huff_CT_trend,aes(group = Candidate,color = Candidate)) + scale_colour_manual(values=c("blue","green","red","black"))
+
+```
+
+#### Conclusions
+
+1. "Undecided" and "Other" Candidates do not seem to be in competition as indicated by all of the polls (Plot 1.).
+
+2. Percent Votes from combined polls for each candidate based on month also indicates that the "Undecided" and "Other" Candidates are not in competition from beginning of the year. (Plot 2.)
+
+3. Hence further reporting and predictions will be done for the top runners Hillary Clinton and Donald Trump. 
+
+#### Bar Plots for Clinton Vs Trump Based on Polls and well as monthly Trends
+
+```{r  warning=FALSE, message=FALSE, cache=FALSE}
+
+Huff_CT<- Huff_gathered %>% filter(Candidate == "Clinton" |Candidate == "Trump")
+
+ggplot(Huff_CT, aes(x=month,y=percent_votes,fill=Candidate))+
+  geom_bar(stat="identity",position="dodge") + 
+  facet_wrap(~poll_name) + 
+  scale_fill_manual(values=c("blue","red"))
+
+ggplot(Huff_CT, aes(month,percent_votes, fill=Candidate)) +              geom_bar(stat="identity",position="dodge") + 
+scale_fill_manual(values=c("blue","red"))
+
+
+```
+
+#### Conclusions
+
+Most of the poll results as well as overall monthly trend indicates that Hillary Clinton has been constantly leading since January. 
+
+It is intersting to note that the difference in votes varies on monthly basis this could be mostly due to the issues addressed by the candidates in their rallies. Although the impact of issues on Voter's mood will not be considered in the current report, such a study in future could show intersting trends.
+
+## Predictions
+
+Based on the observations and conclusions predicitions will be done for Hillary Clinton using TimeSeries Modelling. 
+
+Data needs to be stored in Time-Series format 
+
+```{r}
+
+Huff$ClintonLeads <- Huff$Clinton - Huff$Trump
+Huff_clinton <- select(Huff,month,Clinton)
+Huff_clintonLeads <- select(Huff,month,ClintonLeads)
+
+Huff_agg <- aggregate(Clinton~month,data= Huff_clinton,mean)
+rdate <- as.Date(Huff_agg$month,"%Y-%m-%d")
+#rdate <- month(Huff_agg$month)
+Huff_ts_agg <- ts(Huff_agg)
+
+```
+```{r include=FALSE, cache=FALSE}
+
+library(zoo)
+library(timeSeries)
+library(forecast)
+
+```
+
+
+Plot of the time series data is generated. This gives the trend over time
+
+#### Time Series Plots for Clinton monthly Trends
+
+```{r  warning=FALSE, message=FALSE, cache=FALSE}
+plot(Huff_agg$Clinton~rdate,type="l",col="blue",axes=F)
+box()
+axis(1,rdate,format(rdate,"%b"))
+
+```
+
