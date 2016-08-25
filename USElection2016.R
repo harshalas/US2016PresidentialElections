@@ -57,8 +57,6 @@ Huff <- mutate(Huff, num_of_voters = num_voters,type_of_voter = voter_type,
                     poll_start_date = poll_start_date,poll_end_date = poll_end_date)
 
 
-#Huff$type_of_voter <- as.factor(Huff$type_of_voter)
-
 # Compute month variable from poll_start_date
 Huff$month <- ifelse(month(Huff$poll_start_date)==1,"Jan",
                               ifelse(month(Huff$poll_start_date)==2,"Feb",
@@ -74,15 +72,6 @@ Huff$month <- ifelse(month(Huff$poll_start_date)==1,"Jan",
 
 
 Huff$month <-as.Date(as.yearmon(Huff$month,"%b"))
-#as.Date(Huff$month, format =  "%b")
-#as.POSIXct(Huff$month,format="%b")
-#str(format.AsIs(as.Date(as.yearmon(Huff$month,"%b")),"%b"))
-#format.Date(as.character(Huff$month), format="%b")
-
-#Huff$month <-as.yearmon(Huff$month1,format="%b")
-
-#str(months.Date(Huff$month))
-
 
 # Remove Poll Column
 Huff$Poll <- NULL
@@ -118,24 +107,12 @@ Huff$TrumpLead <-  with(Huff, ifelse(word(Spread,1) == "Trump",1,0))
 Huff$ClintonLeads <- Huff$Clinton - Huff$Trump
 
 
-
-
-
 # Transpose data
 library(tidyr)
 
 Huff_gathered <- Huff %>% gather(Candidate,percent_votes,Trump:Undecided)
-
 str(Huff_gathered)
-
 Huff_gathered$Candidate <- as.factor(Huff_gathered$Candidate)
-
-#Huff_gathered$Poll <- NULL
-
-#Huff_gathered <- Huff_gathered[c(1,2,9,10,3,4,5,6,7,8)]
-
-
-
 
 # Basic Plot
 
@@ -156,7 +133,7 @@ ggplot(Huff_CT_trend,aes(month,percent_votes)) +
 
 # grouped by polls and showing only Clinton Vs Trump
 
-Huff_CT<- Huff_gathered %>% filter(Candidate == "Clinton" |Candidate == "Trump")
+Huff_CT<- Huff_gathered %>% dplyr::filter(Candidate == "Clinton" |Candidate == "Trump")
 
 ggplot(Huff_CT, aes(x=month,y=percent_votes,fill=Candidate))+
   geom_bar(stat="identity",position="dodge") + facet_wrap(~poll_name) + 
@@ -187,37 +164,16 @@ Huff_clinton <- select(Huff,month,Clinton)
 Huff_clintonLeads <- select(Huff,month,ClintonLeads)
 
 
-
-
 library(zoo)
-
 library(timeSeries)
 
 Huff_agg <- aggregate(Clinton~month,data= Huff_clinton,mean)
-rdate <- as.Date(Huff_agg$month,"%Y-%m-%D")
-Huff_ts_agg <- ts(Huff_agg)
+Huff_ts_agg <- ts(Huff_agg$Clinton)
 
-plot.ts(Huff_agg$Clinton)
-
-plot.ts(Huff_agg$Clinton,col="blue",axes=F,xlab = "month", ylab = "Clinton Leads")
-box()
-axis(1,Huff_agg$month,format(Huff_agg$month,format="%b"))
-
-
-
+plot.ts(Huff_ts_agg,col="blue",xlab = "month", ylab = "Clinton Leads")
 
 
 library(forecast)
-
-fit.Clinton <- tslm(Clinton ~ month, data=Huff_ts_agg)
-plot(Huff_ts_agg, ylab="Clinton Leads",
-     plot.type="single", col=2, xlab="month")
-legend("topright", legend=c("Clinton","month"),
-       lty=1, col=c(1,2), cex=.9)
-plot(Clinton ~ month, data=Huff_ts_agg, 
-     ylab="Clinton Leads", xlab="month")
-abline(fit.Clinton)
-summary(fit.Clinton)
 
 Clintonforecasts <- forecast(Huff_ts_agg,h=8,level=c(80,95))
 
@@ -227,17 +183,4 @@ plot(fitted(Clintonforecasts))
 plot(Clintonforecasts, xlab="time")
 lines(fitted(Clintonforecasts),col="blue")
 summary(Clintonforecasts)
-
-z1.index <- ISOdatetime(2016, rep(1:2,5), sample(28,10), 0, 0, 0)
-
-str(Huff_clintonLeads)
-
-Huff_ts_clinton <- zoo(Huff_clintonLeads,order.by=Huff_clintonLeads$month)
-
-View(Huff_ts_clinton)
-
-plot(Huff_ts_clinton$ClintonLeads)
-
-plot(Huff_ts_clinton, plot.type = "single", col = 1:2)
-
 
