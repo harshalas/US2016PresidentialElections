@@ -187,6 +187,8 @@ Huff_clinton <- select(Huff,month,Clinton)
 Huff_clintonLeads <- select(Huff,month,ClintonLeads)
 
 
+
+
 library(zoo)
 
 library(timeSeries)
@@ -195,20 +197,25 @@ Huff_agg <- aggregate(Clinton~month,data= Huff_clinton,mean)
 rdate <- as.Date(Huff_agg$month,"%Y-%m-%D")
 Huff_ts_agg <- ts(Huff_agg)
 
-plot(Huff_agg$Clinton~rdate,type="l",col="blue",axes=F)
+plot.ts(Huff_agg$Clinton)
+
+plot.ts(Huff_agg$Clinton,col="blue",axes=F,xlab = "month", ylab = "Clinton Leads")
 box()
-axis(1,rdate,format(rdate,"%b"))
+axis(1,Huff_agg$month,format(Huff_agg$month,format="%b"))
+
+
+
 
 
 library(forecast)
 
 fit.Clinton <- tslm(Clinton ~ month, data=Huff_ts_agg)
-plot(Huff_ts_agg, ylab="Clinton percent",
-     plot.type="single", col=1:2, xlab="month")
+plot(Huff_ts_agg, ylab="Clinton Leads",
+     plot.type="single", col=2, xlab="month")
 legend("topright", legend=c("Clinton","month"),
        lty=1, col=c(1,2), cex=.9)
 plot(Clinton ~ month, data=Huff_ts_agg, 
-     ylab="Clinton", xlab="month")
+     ylab="Clinton Leads", xlab="month")
 abline(fit.Clinton)
 summary(fit.Clinton)
 
@@ -221,7 +228,16 @@ plot(Clintonforecasts, xlab="time")
 lines(fitted(Clintonforecasts),col="blue")
 summary(Clintonforecasts)
 
+z1.index <- ISOdatetime(2016, rep(1:2,5), sample(28,10), 0, 0, 0)
 
-#write.csv(Huff_ts_clinton, file = "Huff_ts_clinton.csv",row.names=FALSE)
+str(Huff_clintonLeads)
+
+Huff_ts_clinton <- zoo(Huff_clintonLeads,order.by=Huff_clintonLeads$month)
+
+View(Huff_ts_clinton)
+
+plot(Huff_ts_clinton$ClintonLeads)
+
+plot(Huff_ts_clinton, plot.type = "single", col = 1:2)
 
 

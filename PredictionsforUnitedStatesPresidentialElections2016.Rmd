@@ -221,8 +221,7 @@ Huff_clintonLeads <- select(Huff,month,ClintonLeads)
 
 Huff_agg <- aggregate(Clinton~month,data= Huff_clinton,mean)
 rdate <- as.Date(Huff_agg$month,"%Y-%m-%d")
-#rdate <- month(Huff_agg$month)
-Huff_ts_agg <- ts(Huff_agg)
+Huff_ts_agg <- ts(Huff_agg$Clinton)
 
 ```
 ```{r include=FALSE, cache=FALSE}
@@ -239,9 +238,34 @@ Plot of the time series data is generated. This gives the trend over time
 #### Time Series Plots for Clinton monthly Trends
 
 ```{r  warning=FALSE, message=FALSE, cache=FALSE}
-plot(Huff_agg$Clinton~rdate,type="l",col="blue",axes=F)
+
+plot.ts(Huff_agg$Clinton,col="blue",axes=F,xlab = "month", ylab = "Clinton Leads")
 box()
-axis(1,rdate,format(rdate,"%b"))
+axis(1,Huff_agg$month,format(Huff_agg$month,format="%b"))
 
 ```
+
+
+Looking at the plot, there seems to have been fluctuations for Clinton earlier during the year, this could probably be because there was race among democratic candidates. However after May , Clinton has been having Upward trend. The fluctuation in the upward trend could be due to the issues she has been addressing during the rallies. This is a potential factor that could be used for predictions in the future(this report does not use the issues addressed by candidates)
+
+Predictions is done using forecast() function. Data is fitted in time series linear model .
+
+```{r}
+
+
+Clintonforecasts <- forecast(Huff_ts_agg,h=8,level=c(80,95))
+
+plot(Clintonforecasts)
+plot(fitted(Clintonforecasts))
+
+summary(Clintonforecasts)
+
+
+```
+
+From the forecast above, it is very much apparent that Clinton will maintain her lead in next couple of months up until the election which will be result of final election as well. 
+
+## Acknowledgements
+
+I am grateful to my mentor for being a constant support throught out my Data Science learning Journey and Suggesting Capstone Project and Time Series modelling method. 
 
