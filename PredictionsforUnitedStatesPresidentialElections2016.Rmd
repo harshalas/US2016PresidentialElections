@@ -262,6 +262,8 @@ summary(Clintonforecasts)
 
 From the forecast above, it is very much apparent that Clinton will maintain her lead in next couple of months up until the election which will be result of final election as well. 
 
+This report can be further used to study the opinion polls conducted by various agencies and get the mood of general public. This could help the Presidential candidates to address the issues identified in the polls. Since this report is a live up-to-date timeline series, strategists of the respective parties could identify the changes and act immediately to reverse any adverse trends. 
+
 ## Acknowledgements
 
 I am grateful to my mentor **Joel Bangalan** for being a constant support throught out my Data Science learning Journey and Suggesting Capstone Project and Time Series modelling method. 
